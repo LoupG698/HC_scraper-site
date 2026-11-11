@@ -6,13 +6,19 @@
 <title>Cause List Watch</title>
 <style>
   :root {
-    --bg: #f6f4ef; --surface: #ffffff; --text: #1d1c1a; --muted: #6b675f;
-    --line: #e3dfd6; --accent: #8a2c1d; --mark: #ffe08a; --ok: #2f6b3a; --bad-bg: #fbe9e6;
+    /* "Stormy morning": #6A89A7 #BDDDFC #88BDF2 #384959. #52708C is #6A89A7 darkened
+       to reach 4.5:1 for small text on white; #6A89A7 itself is only used for borders. */
+    --bg: #eef5fc; --surface: #ffffff; --text: #384959; --muted: #52708c;
+    --line: #bdddfc; --rule: #6a89a7; --sky: #88bdf2;
+    --accent: #384959; --on-accent: #ffffff; --mark: #88bdf2; --on-mark: #384959;
+    --bad: #b3261e; --bad-bg: #fbeaea; --pill: #bdddfc; --on-pill: #384959;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #161513; --surface: #201f1c; --text: #ece8e1; --muted: #a29d93;
-      --line: #34312c; --accent: #e07b62; --mark: #6b5310; --ok: #7cc48a; --bad-bg: #3a1e19;
+      --bg: #1b2530; --surface: #243241; --text: #e8f1fb; --muted: #9db8d2;
+      --line: #384959; --rule: #6a89a7; --sky: #88bdf2;
+      --accent: #88bdf2; --on-accent: #1b2530; --mark: #88bdf2; --on-mark: #1b2530;
+      --bad: #f2a7a0; --bad-bg: #3a2226; --pill: #384959; --on-pill: #88bdf2;
     }
   }
   * { box-sizing: border-box; }
@@ -22,13 +28,14 @@
   h1 { font: 600 14px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase;
     color: var(--muted); margin: 0 0 4px; }
   .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
-  .banner { background: var(--bad-bg); border: 1px solid var(--accent); border-radius: 10px;
+  .banner { background: var(--bad-bg); border: 1px solid var(--bad); border-radius: 10px;
     padding: 12px 14px; margin-bottom: 20px; font-size: 14px; }
   .hero { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; }
   .eyebrow { margin: 0; color: var(--muted); font-size: 14px; }
   .hero h2 { font: 600 clamp(26px, 6vw, 36px)/1.15 Georgia, "Times New Roman", serif; margin: 4px 0 8px; }
-  .big { margin: 0; font-size: 18px; font-weight: 600; color: var(--accent); }
-  .big.none, .count.none { color: var(--ok); }
+  .big { display: inline-block; margin: 0; font-size: 17px; font-weight: 600; }
+  .big, .count { background: var(--pill); color: var(--on-pill); padding: 2px 10px; border-radius: 999px; }
+  .big.none, .count.none { background: none; color: var(--muted); padding: 2px 0; }
   details.day { border-bottom: 1px solid var(--line); padding: 4px 0; }
   summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer;
     padding: 12px 0; list-style: none; }
@@ -36,9 +43,9 @@
   summary::before { content: "\25B8"; color: var(--muted); margin-right: -4px; }
   details[open] > summary::before { content: "\25BE"; }
   .date { flex: 1; font-weight: 600; }
-  .count { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .count { font-weight: 600; white-space: nowrap; align-self: center; font-size: 14px; }
   .meta, .empty { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  .card { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--sky); border-radius: 12px;
     padding: 16px; margin: 0 0 14px; }
   .card header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
   .court { margin: 0; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
@@ -51,18 +58,18 @@
   th, td { text-align: left; vertical-align: top; padding: 6px 0; border-top: 1px solid var(--line); }
   th { width: 30%; max-width: 180px; padding-right: 12px; color: var(--muted); font-weight: 500; }
   td { overflow-wrap: anywhere; }
-  mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 3px; }
+  mark { background: var(--mark); color: var(--on-mark); padding: 0 2px; border-radius: 3px; }
   .notes { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
   .card footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
     margin-top: 12px; font-size: 13px; color: var(--muted); }
   a { color: var(--accent); font-weight: 600; }
-  .runner { border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 24px; }
+  .runner { border: 1px dashed var(--rule); border-radius: 12px; padding: 12px 14px; margin: 0 0 24px; }
   .runner-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .runner label { display: flex; flex: 1; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); min-width: 0; }
   .runner input { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 8px 10px; border-radius: 8px;
     border: 1px solid var(--line); background: var(--surface); color: var(--text); }
   .runner button { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 8px;
-    border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+    border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
   .runner button:disabled { opacity: .5; cursor: progress; }
   .hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
   .hint:empty, .hint:has(> [hidden]) { display: none; }
@@ -76,7 +83,7 @@
 <body>
 <main>
   <h1>Cause List Watch</h1>
-  <p class="sub">Allahabad High Court listings for Satya Dheer Singh Jadaun. Last checked 11 Nov 2026, 03:29 PM IST.</p>
+  <p class="sub">Allahabad High Court listings for Satya Dheer Singh Jadaun. Last checked 11 Nov 2026, 03:37 PM IST.</p>
   
 <section class="runner" id="runner" data-repo="LoupG698/HC_scraper" data-ref="main" data-workflow="cause-list.yml">
   <div class="runner-row">
@@ -179,7 +186,7 @@
         <span class="date">Thursday, 12 November 2026</span>
         <span class="count">9 listings</span>
       </summary>
-      <p class="meta">Checked 11 Nov 2026, 03:29 PM IST. Lists searched: Combined Cause List, Application (Correction).</p>
+      <p class="meta">Checked 11 Nov 2026, 03:37 PM IST. Lists searched: Combined Cause List, Application (Correction).</p>
       
       <article class="card">
         <header>
