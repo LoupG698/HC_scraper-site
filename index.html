@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cause List Watch</title>
+<style>
+  :root {
+    --bg: #f6f4ef; --surface: #ffffff; --text: #1d1c1a; --muted: #6b675f;
+    --line: #e3dfd6; --accent: #8a2c1d; --mark: #ffe08a; --ok: #2f6b3a; --bad-bg: #fbe9e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161513; --surface: #201f1c; --text: #ece8e1; --muted: #a29d93;
+      --line: #34312c; --accent: #e07b62; --mark: #6b5310; --ok: #7cc48a; --bad-bg: #3a1e19;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font: 600 14px/1 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+  .banner { background: var(--bad-bg); border: 1px solid var(--accent); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 20px; font-size: 14px; }
+  .hero { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; }
+  .eyebrow { margin: 0; color: var(--muted); font-size: 14px; }
+  .hero h2 { font: 600 clamp(26px, 6vw, 36px)/1.15 Georgia, "Times New Roman", serif; margin: 4px 0 8px; }
+  .big { margin: 0; font-size: 18px; font-weight: 600; color: var(--accent); }
+  .big.none, .count.none { color: var(--ok); }
+  details.day { border-bottom: 1px solid var(--line); padding: 4px 0; }
+  summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer;
+    padding: 12px 0; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "\25B8"; color: var(--muted); margin-right: -4px; }
+  details[open] > summary::before { content: "\25BE"; }
+  .date { flex: 1; font-weight: 600; }
+  .count { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .meta, .empty { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; margin: 0 0 14px; }
+  .card header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .court { margin: 0; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  .card h3 { margin: 2px 0 0; font: 600 20px/1.25 ui-monospace, "SF Mono", Menlo, monospace;
+    overflow-wrap: anywhere; }
+  .serial { text-align: right; font: 600 22px/1 ui-monospace, monospace; white-space: nowrap; }
+  .serial span { display: block; font: 12px/1.4 ui-sans-serif, system-ui, sans-serif; color: var(--muted); }
+  .bench { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 0; border-top: 1px solid var(--line); }
+  th { width: 30%; max-width: 180px; padding-right: 12px; color: var(--muted); font-weight: 500; }
+  td { overflow-wrap: anywhere; }
+  mark { background: var(--mark); color: inherit; padding: 0 2px; border-radius: 3px; }
+  .notes { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .card footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    margin-top: 12px; font-size: 13px; color: var(--muted); }
+  a { color: var(--accent); font-weight: 600; }
+  .runner { border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 24px; }
+  .runner-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .runner label { display: flex; flex: 1; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); min-width: 0; }
+  .runner input { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 8px 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .runner button { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 8px;
+    border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+  .runner button:disabled { opacity: .5; cursor: progress; }
+  .hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .hint:empty, .hint:has(> [hidden]) { display: none; }
+  @media (max-width: 480px) {
+    th, td { display: block; width: auto; }
+    th { padding-bottom: 0; max-width: none; }
+    td { border-top: 0; padding-top: 2px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cause List Watch</h1>
+  <p class="sub">Allahabad High Court listings for Satya Dheer Singh Jadaun. Last checked 11 Nov 2026, 03:20 PM IST.</p>
+  
+<section class="runner" id="runner" data-repo="LoupG698/HC_scraper" data-ref="main" data-workflow="cause-list.yml">
+  <div class="runner-row">
+    <label>Date <input type="text" id="run-date" placeholder="dd-mm-yyyy (optional)" inputmode="numeric"></label>
+    <button id="run-btn" type="button">Run check now</button>
+  </div>
+  <div id="token-box" hidden>
+    <p class="hint">Paste a GitHub fine-grained token for this repository with
+      <b>Actions: Read and write</b>. It is stored only in this browser.</p>
+    <div class="runner-row">
+      <input type="password" id="token" placeholder="github_pat_..." autocomplete="off">
+      <button id="token-save" type="button">Save</button>
+    </div>
+  </div>
+  <p id="run-status" class="hint" aria-live="polite"></p>
+  <p class="hint"><a href="#" id="forget" hidden>Forget token</a></p>
+</section>
+<script>
+(() => {
+  const box = document.getElementById("runner");
+  const repo = box.dataset.repo, ref = box.dataset.ref, wf = box.dataset.workflow;
+  const api = `https://api.github.com/repos/${repo}/actions/workflows/${wf}`;
+  const $ = (id) => document.getElementById(id);
+  const KEY = "cl-gh-token";
+  const store = {
+    get() { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } },
+    set(v) { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch {} },
+  };
+  const status = (msg) => { $("run-status").textContent = msg; };
+  const headers = () => ({
+    Authorization: `Bearer ${store.get()}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  });
+  const refreshForget = () => { $("forget").hidden = !store.get(); };
+  refreshForget();
+
+  $("forget").onclick = (e) => { e.preventDefault(); store.set(""); refreshForget(); status("Token removed."); };
+  $("token-save").onclick = () => {
+    store.set($("token").value.trim()); $("token").value = "";
+    $("token-box").hidden = true; refreshForget(); run();
+  };
+  $("run-btn").onclick = () => run();
+
+  async function run() {
+    if (!store.get()) { $("token-box").hidden = false; $("token").focus(); return; }
+    const date = $("run-date").value.trim();
+    if (date && !/^\d{2}-\d{2}-\d{4}$/.test(date)) { status("Date must look like 13-11-2026."); return; }
+    $("run-btn").disabled = true;
+    status("Starting...");
+    const started = Date.now();
+    try {
+      const res = await fetch(`${api}/dispatches`, {
+        method: "POST", headers: headers(),
+        body: JSON.stringify({ ref, inputs: { target_date: date } }),
+      });
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        store.set(""); refreshForget(); $("token-box").hidden = false;
+        throw new Error(`token rejected (HTTP ${res.status}). Paste a token with Actions write access.`);
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await watch(started);
+    } catch (err) {
+      status(`Could not start the check: ${err.message}`);
+    } finally {
+      $("run-btn").disabled = false;
+    }
+  }
+
+  async function watch(started) {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    for (let i = 0; i < 120; i++) {
+      await sleep(10000);
+      const res = await fetch(`${api}/runs?event=workflow_dispatch&per_page=1`, { headers: headers() });
+      if (!res.ok) continue;
+      const run = (await res.json()).workflow_runs?.[0];
+      if (!run || Date.parse(run.created_at) < started - 60000) { status("Queued, waiting for GitHub..."); continue; }
+      if (run.status !== "completed") { status(`Running (${run.status.replace("_", " ")})...`); continue; }
+      if (run.conclusion !== "success") { status(`Check finished with: ${run.conclusion}. Notifications may have details.`); return; }
+      status("Done. Waiting for the page to publish...");
+      await sleep(45000);
+      location.reload();
+      return;
+    }
+    status("Still running. Reload this page in a few minutes.");
+  }
+})();
+</script>
+
+  
+  
+    <section class="hero">
+      <p class="eyebrow">Next listing date</p>
+      <h2>Thursday, 12 November 2026</h2>
+      <p class="big">9 cases listed</p>
+    </section>
+  
+    <details class="day" open>
+      <summary>
+        <span class="date">Thursday, 12 November 2026</span>
+        <span class="count">9 listings</span>
+      </summary>
+      <p class="meta">Checked 11 Nov 2026, 03:20 PM IST. Lists searched: Combined Cause List, Application (Correction).</p>
+      
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-42</p>
+            <h3>CRLA/1723/2002</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>98</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE ATUL SREEDHARAN<br>HON&#x27;BLE JUSTICE ACHAL SACHDEV</p>
+        <table><tr><th>Case</th><td>CRLA/1723/2002 AZAMGARH TC No.: Session Trial/290/1994</td></tr><tr><th>Parties</th><td>RAMESH RAI VS STATE OF U.P.</td></tr><tr><th>Petitioner&#x27;s counsel</th><td>AMIT KUMAR SINGH SATYENDRA PRAKASH SRIVASTAVA SANTOSH KUMAR RAI <mark>SATYA DHEER SINGH JADAUN</mark> SUDHIR KUMAR SINGH ZAFAR ABBAS ASHWANI KUMAR RAI --------------------- MOHD RAGHIB ALI D.N. WALI</td></tr><tr><th>Respondent&#x27;s counsel</th><td>ASHWANI KUMAR RAI MAHESH PRASAD YADAV PRASHANT RAI NARENDRA DEO RAI RAKESH PANDEY M.P. YADAV GOVT. ADVOCATE</td></tr></table>
+        
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=455" target="_blank" rel="noopener">Open PDF at page 455</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-46</p>
+            <h3>GOVA/1775/2003</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>93</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE RAJIV GUPTA<br>HON&#x27;BLE JUSTICE DEVENDRA SINGH-I</p>
+        <table><tr><th>Case</th><td>GOVA/1775/2003 ETAWAH TC No.: Session Trial/565/1995</td></tr><tr><th>Parties</th><td>STATE OF U.P. VS SUNIL AND OTHERS</td></tr><tr><th>Petitioner&#x27;s counsel</th><td>HIMANSHU KUMAR HIMANSHU MISHRA AMIT DAGA R.K. SHUKLA S.K. AGARWAL <mark>S.D. SINGH JADAUN</mark> VIRESH MISRA A.G.A. ARUN KUMAR MISHRA</td></tr><tr><th>Respondent&#x27;s counsel</th><td>A.K. AWASTHI R.J. SINGH MANISH TIWARI</td></tr></table>
+        
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=572" target="_blank" rel="noopener">Open PDF at page 572</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-46</p>
+            <h3>CRLR/3003/2011</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>93.1</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE RAJIV GUPTA<br>HON&#x27;BLE JUSTICE DEVENDRA SINGH-I</p>
+        <table><tr><th>Case</th><td>CRLR/3003/2011 (ETAWAH)</td></tr><tr><th>Parties</th><td>PRADYUMN KRISHNA TIWARI vs STATE OF U.P. AND OTHERS</td></tr><tr><th>Petitioner&#x27;s counsel</th><td>VIRESH MISHRA <mark>S.D.S.JADAUN</mark></td></tr><tr><th>Respondent&#x27;s counsel</th><td>S. DWIVEDI MANISH TIWARI K.M. MISHRA GOVT. ADVOCATE</td></tr></table>
+        
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=572" target="_blank" rel="noopener">Open PDF at page 572</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-48</p>
+            <h3>CRLP/23089/2026</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>506</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE CHANDRA DHARI SINGH<br>HON&#x27;BLE JUSTICE TARUN SAXENA</p>
+        <table><tr><th>Case</th><td>CRLP/23089/2026 KANPUR NAGAR Notice No: A20261324959</td></tr><tr><th>Parties</th><td>AJAY KUMAR VS STATE OF U.P. AND 2 OTHERS</td></tr><tr><th>Petitioner&#x27;s counsel</th><td><mark>SATYA DHEER SINGH JADAUN</mark> BHAVESH SINGH JADAUN</td></tr><tr><th>Respondent&#x27;s counsel</th><td>ASHISH KUMAR GIRISH SINGH G.A.</td></tr></table>
+        <ul class="notes"><li>Crime No- 144/2026, Police St.- KOTWALI, District- KANPUR NAGAR</li></ul>
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=647" target="_blank" rel="noopener">Open PDF at page 647</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-65</p>
+            <h3>BAIL/40121/2026</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>46F</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE SAMEER JAIN</p>
+        <table><tr><th>Case</th><td>BAIL/40121/2026 HAMIRPUR Notice No: A20261239080</td></tr><tr><th>Parties</th><td>BRIJESH SINGH CHANDEL VS STATE OF U.P.</td></tr><tr><th>Petitioner&#x27;s counsel</th><td><mark>SATYA DHEER SINGH JADAUN</mark> JALAJ SINGH</td></tr><tr><th>Respondent&#x27;s counsel</th><td>G.A.</td></tr></table>
+        <ul class="notes"><li>In Jail Since:12/06/2026</li><li>Crime No- 86/2026, Police St.- BINWAR, District- HAMIRPUR</li></ul>
+        <footer>
+          <span>Combined Cause List &middot; Fresh List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=876" target="_blank" rel="noopener">Open PDF at page 876</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-65</p>
+            <h3>BAIL/791/2026</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>91</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE SAMEER JAIN</p>
+        <table><tr><th>Case</th><td>BAIL/791/2026 ALLAHABAD Notice No: A20251245400</td></tr><tr><th>Parties</th><td>BALVEER SINGH VS STATE OF U.P.</td></tr><tr><th>Petitioner&#x27;s counsel</th><td><mark>SATYA DHEER SINGH JADAUN</mark> AJAY KUMAR SRIVASTAVA VIKAS SRIVASTAVA</td></tr><tr><th>Respondent&#x27;s counsel</th><td>INDRA DEO MISHRA DEZEE YADAV DIGVIJAY SINGH G.A.</td></tr></table>
+        <ul class="notes"><li>In Jail Since:16/04/2025</li><li>Crime No- 46/2025, Police St.- KHERI, District- ALLAHABAD</li></ul>
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=884" target="_blank" rel="noopener">Open PDF at page 884</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-78</p>
+            <h3>CRLP/11948/2005</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>153.1</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE SANDEEP JAIN</p>
+        <table><tr><th>Case</th><td>CRLP/11948/2005 (KANPUR NAGAR)</td></tr><tr><th>Parties</th><td>SMT. SAVITRI JAISWAL vs STATE OF U.P. AND OTHERS</td></tr><tr><th>Petitioner&#x27;s counsel</th><td>P.K. SINGH SHASHI KANT SINGH <mark>SATYA DHEER SINGH JADAUN</mark></td></tr><tr><th>Respondent&#x27;s counsel</th><td>GOVT. ADVOCATE</td></tr></table>
+        
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=1393" target="_blank" rel="noopener">Open PDF at page 1393</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-81</p>
+            <h3>NA528/46944/2026</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>126F</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE PRASHANT MISHRA-I</p>
+        <table><tr><th>Case</th><td>NA528/46944/2026 ALLAHABAD Notice No: A20260252442</td></tr><tr><th>Parties</th><td>RAJENDRA KUMAR SHARMA VS STATE OF U.P. AND ANOTHER</td></tr><tr><th>Petitioner&#x27;s counsel</th><td><mark>SATYA DHEER SINGH JADAUN</mark> HARE RAM PANDEY</td></tr><tr><th>Respondent&#x27;s counsel</th><td>KRANTI KIRAN PANDEY MANISH DWIVEDI G.A.</td></tr></table>
+        
+        <footer>
+          <span>Combined Cause List &middot; Fresh List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=1509" target="_blank" rel="noopener">Open PDF at page 1509</a>
+        </footer>
+      </article>
+      <article class="card">
+        <header>
+          <div>
+            <p class="court">Court No-88</p>
+            <h3>CRLA/5464/2021</h3>
+          </div>
+          <div class="serial"><span>Sr. No.</span>99.2</div>
+        </header>
+        <p class="bench">HON&#x27;BLE JUSTICE ABDUL SHAHID</p>
+        <table><tr><th>Case</th><td>CRLA/5464/2021 (KANPUR NAGAR)</td></tr><tr><th>Parties</th><td>SUBHAM @ JITENDRA RAJESH DWIVEDI vs BIRENDRA SINGH STATE OF U.P. <mark>SATYA DHEER SINGH JADAUN</mark> RINKI GUPTA BINOD KUMAR MISHRA ATUL KUMAR DUBEY RAKSHA CHAUHAN</td></tr><tr><th>Petitioner&#x27;s counsel</th><td>G.A.</td></tr></table>
+        
+        <footer>
+          <span>Combined Cause List &middot; Daily Cause List</span>
+          <a href="https://www2.allahabadhighcourt.in/clist/-99_0_CauseList12112026_All_05112026065103.pdf#page=1777" target="_blank" rel="noopener">Open PDF at page 1777</a>
+        </footer>
+      </article>
+    </details>
+</main>
+</body>
+</html>
